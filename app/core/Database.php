@@ -174,6 +174,15 @@ class Database
       return $inisial . $tmp . $angka;
    }
 
+   public function form_input($type, $class, $name, placeholder, $value = null){
+      # example simple no array
+      $html = "<input type='$text' class='$class' name='$name' placeholder='$placeholder' value = '$value' />";
+      return $html;
+      
+      # example array form_input($form_attribute);
+      # $form_attribute = array('type' => 'text', 'class' => 'form-control', 'name' = > 'username', 'placeholder' = > 'username');
+   }
+
    public function cmb_dinamis($name, $table, $display_column, $value_column, $selected_value = null)
    {
       $sql = "SELECT $value_column, $display_column FROM $table";
