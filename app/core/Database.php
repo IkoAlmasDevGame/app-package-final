@@ -177,9 +177,7 @@ class Database
    public function form_input($type, $class, $name, $placeholder, $value = null)
    {
       # example simple no array
-      $html = "<div class='col-md-6'>";
-      $html .= "<input type='$type' class='$class' name='$name' placeholder='$placeholder' value = '$value' />";
-      $html .= "</div>";
+      $html = "<input type='$type' class='$class' name='$name' placeholder='$placeholder' value = '$value' />";
       return $html;
 
       # example array form_input($form_attribute);
