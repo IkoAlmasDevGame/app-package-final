@@ -6,8 +6,7 @@ if ($_SESSION['hak_akses'] == "") {
 ?>
 
 <?php if ($_SESSION['hak_akses'] == ""): ?>
-<?php else: ?>
-<header id="header" class="header fixed-top d-flex align-items-center" style="position:fixed">
+   <header id="header" class="header fixed-top d-flex align-items-center" style="position:fixed">
    <div class="d-flex align-items-center justify-content-between">
       <a href="" role="button" class="d-flex align-items-center fs-5 fst-normal fw-semibold">
          <h4 class="fw-semibold fst-italic fs-5 display-4"><?php echo "APP PACKAGE"; ?></h4>
@@ -119,6 +118,7 @@ if ($_SESSION['hak_akses'] == "") {
 
       </div>
    </section>
+<?php else: ?>
    <?php
       header("location:" . URL_BASE . "index.php");
       exit(0);
