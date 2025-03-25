@@ -1,4 +1,21 @@
 <?php
+function str_mask($value, $mask, $char = '*')
+{
+   $result = '';
+   $value = str_split($value);
+   $mask = str_split($mask);
+
+   foreach ($mask as $key => $char_mask) {
+      if ($char_mask === '#') {
+         $result .= $value[$key];
+      } else {
+         $result .= $char;
+      }
+   }
+
+   return $result;
+}
+
 # Pengaturan tanggal komputer
 date_default_timezone_set("Asia/Jakarta");
 

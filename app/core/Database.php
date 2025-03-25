@@ -21,13 +21,47 @@ class Database
    public function query($sql)
    {
       return $this->dbh->query($sql, MYSQLI_STORE_RESULT);
-      # insert, update, read (CRU)
+   }
+
+   public function CREATE($tabel, $data)
+   {
+      foreach ($data as $field => $value) {
+         $values[] = "'" . addslashes($data[$field]) . "'";
+         $fields[] = "'" . $field . "'";
+      }
+      $value_list = join(",", $values);
+      $field_list = join(",", $fields);
+      $query = "INSERT INTO " . $tabel . " (" . $field_list . ") VALUES (" . $value_list . ")";
+      $hasil = $this->dbh->query($query);
+      return $hasil;
+   }
+
+   public function SELECT($tabel)
+   {
+      $sql = "SELECT * FROM $tabel";
+      $result = $this->dbh->query($sql);
+      return $result;
+   }
+
+   public function UPDATE($tabel, $data, $where)
+   {
+      foreach ($where as $f_where => $v_where) {
+         $vws[] = "'" . $f_where . "' = '" . addslashes($where[$f_where]) . "'";
+      }
+      foreach ($data as $field => $value) {
+         $dt[] = "'" . $field . "' = '" . addslashes($data[$field]) . "'";
+      }
+      $data_list = join(",", $dt);
+      $where_list = join(" AND ", $vws);
+      $query = "UPDATE $tabel SET $data_list WHERE $where_list";
+      $hasil = $this->dbh->query($query);
+      return $hasil;
    }
 
    public function SELECT_WHERE($tabel, $where, $name)
    {
       $sql = "SELECT * FROM $tabel WHERE $where = '$name'";
-      return $this->dbh->query($sql, MYSQLI_STORE_RESULT);
+      $result = $this->dbh->query($sql, MYSQLI_STORE_RESULT);
       return $result;
       # under English
       # SELECT WHERE on the core database is to search for data desired by the website programmer and must match the database table row example like id_admin or others.
@@ -36,9 +70,9 @@ class Database
       # SELECT WHERE pada core Database ini untuk mencari data yang diinginkan oleh programmer website dan harus sesuai row tabel database contoh seperti id_admin atau yang lainnya.
    }
 
-   public function delete($table, $name)
+   public function delete($table, $where, $id)
    {
-      return $this->dbh->query("DELETE FROM $table WHERE $name='$name'");
+      return $this->dbh->query("DELETE FROM $table WHERE $where = '$id'");
       # dibawah ini bahasa indonesia :
       # database harus sama ketika ingin dihapus pada table yang sesuai.
 
@@ -174,10 +208,10 @@ class Database
       return $inisial . $tmp . $angka;
    }
 
-   public function form_input($type, $class, $name, $placeholder, $value = null)
+   public function form_input($type, $inputmode = null, $maxlength = null, $class, $name, $placeholder, $id = null, $value = null)
    {
       # example simple no array
-      $html = "<input type='$type' class='$class' name='$name' placeholder='$placeholder' value = '$value' />";
+      $html = "<input type='$type' inputmode='$inputmode', maxlength='$maxlength' class='$class' name='$name' placeholder='$placeholder' id='$id' value = '$value' required/>";
       return $html;
 
       # example array form_input($form_attribute);
@@ -187,6 +221,30 @@ class Database
    public function cmb_dinamis($name, $table, $display_column, $value_column, $selected_value = null)
    {
       $sql = "SELECT $value_column, $display_column FROM $table";
+      $result =  $this->dbh->query($sql);
+
+      $html = "<div class='col-sm-6'>";
+      $html .= "<select name='$name' id='$name' class='form-select'>";
+      $html .= "<option value=''>-- Pilih --</option>";
+
+      if ($result->num_rows > 0) {
+         while ($row = $result->fetch_assoc()) {
+            // Cek apakah nilai saat ini adalah nilai yang dipilih
+            $selected = ($row[$value_column] == $selected_value) ? 'selected' : '';
+            $html .= "<option value='" . $row[$value_column] . "' $selected>" . $row[$display_column] . "</option>";
+         }
+      } else {
+         $html .= "<option value=''>Tidak ada opsi tersedia</option>";
+      }
+
+      $html .= "</select>";
+      $html .= "</div>";
+      return $html;
+   }
+
+   public function cmb_dinamis2($name, $table, $where_list = null, $stts = null, $display_column, $value_column, $selected_value = null)
+   {
+      $sql = "SELECT $value_column, $display_column FROM $table WHERE $where_list = '$stts'";
       $result =  $this->dbh->query($sql);
 
       $html = "<div class='col-sm-6'>";
