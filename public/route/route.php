@@ -1,5 +1,5 @@
 <?php
-require_once "../../app/init.php";
+require_once "../../../app/init.php";
 if (isset($_SESSION['status'])) {
 } else {
    echo "<script lang='javascript'>
