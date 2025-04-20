@@ -14,6 +14,10 @@ class Database
    public function __construct()
    {
       $this->dbh = mysqli_connect($this->DB_HOST, $this->DB_USERNAME, $this->DB_PASSWORD, $this->DB_DATABASE, $this->DB_PORT) or mysqli_connect_errno();
+      if ($this->dbh->errno) {
+         echo "database gagal terhubung";
+         die;
+      }
    }
 
    # Khusus MVC Database khusus Models
@@ -63,6 +67,19 @@ class Database
       $sql = "SELECT * FROM $tabel WHERE $where = '$name'";
       $result = $this->dbh->query($sql, MYSQLI_STORE_RESULT);
       return $result;
+      # under English
+      # SELECT WHERE on the core database is to search for data desired by the website programmer and must match the database table row example like id_admin or others.
+
+      # under Indonesian
+      # SELECT WHERE pada core Database ini untuk mencari data yang diinginkan oleh programmer website dan harus sesuai row tabel database contoh seperti id_admin atau yang lainnya.
+   }
+
+   public function SELECT_WHERE2($name_value, $tabel, $where, $name)
+   {
+      $sql = "SELECT $name_value FROM $tabel WHERE $where = '$name'";
+      $result = $this->dbh->query($sql, MYSQLI_STORE_RESULT);
+      $row = $result->fetch_array();
+      return $row[0];
       # under English
       # SELECT WHERE on the core database is to search for data desired by the website programmer and must match the database table row example like id_admin or others.
 
@@ -208,14 +225,55 @@ class Database
       return $inisial . $tmp . $angka;
    }
 
-   public function form_input($type, $inputmode = null, $maxlength = null, $class, $name, $placeholder, $id = null, $value = null)
+   public function CreateCodeAkuntansi($tabel, $id, $inisial, $index, $panjang)
+   {
+      $sql = "SELECT max(" . $id . ") as max_id FROM `" . $tabel . "` WHERE " . $id . " LIKE '" . $inisial . "%'";
+      $data = $this->dbh->query($sql)->fetch_array();
+      $id_max = $data['max_id'];
+
+      if ($index == '' && $panjang == '') {
+         $no_urut   = (int) $id_max;
+      } else if ($index != '' && $panjang == '') {
+         $no_urut    = (int) substr($id_max, $index);
+      } else {
+         $no_urut   = (int) substr($id_max, $index, $panjang);
+      }
+      $no_urut   = $no_urut + 1;
+      if ($index == '' && $panjang == '') {
+         $id_baru  = $no_urut;
+      } else if ($index != '' && $panjang == '') {
+         $id_baru  = $inisial . $no_urut;
+      } else {
+         $id_baru   = $inisial . sprintf("%0$panjang" . "s", $no_urut);
+      }
+
+      return $id_baru;
+   }
+
+   public function form_input($type, $inputmode = null, $dataToggle = null, $dataTarget = null, $maxlength = null, $class, $name, $placeholder, $id = null, $value = null)
    {
       # example simple no array
-      $html = "<input type='$type' inputmode='$inputmode', maxlength='$maxlength' class='$class' name='$name' placeholder='$placeholder' id='$id' value = '$value' required/>";
+      $html = "<input type='$type' inputmode='$inputmode' maxlength='$maxlength' data-bs-toggle='$dataToggle' data-bs-target='$dataTarget' class='$class' name='$name' placeholder='$placeholder' id='$id' value = '$value' required/>";
       return $html;
 
       # example array form_input($form_attribute);
       # $form_attribute = array('type' => 'text', 'class' => 'form-control', 'name' = > 'username', 'placeholder' = > 'username');
+   }
+
+   public function form_input_readonly($type, $inputmode = null, $dataToggle = null, $dataTarget = null, $maxlength = null, $class, $name, $placeholder, $id = null, $value = null)
+   {
+      # example simple no array
+      $html = "<input type='$type' inputmode='$inputmode' maxlength='$maxlength' data-bs-toggle='$dataToggle' data-bs-target='$dataTarget' class='$class' name='$name' placeholder='$placeholder' id='$id' value = '$value' readonly required/>";
+      return $html;
+
+      # example array form_input($form_attribute);
+      # $form_attribute = array('type' => 'text', 'class' => 'form-control', 'name' = > 'username', 'placeholder' = > 'username');
+   }
+
+   public function form_password($class, $name, $placeholder)
+   {
+      $html = "<input type='password' class='$class' name='$name' placeholder='$placeholder' id='password' required/>";
+      return $html;
    }
 
    public function cmb_dinamis($name, $table, $display_column, $value_column, $selected_value = null)
