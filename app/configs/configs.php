@@ -13,13 +13,13 @@ function salam()
    $hour = date("G", $b);
 
    if ($hour >= 0 && $hour <= 11) {
-      echo "Selamat Pagi" || "Good morning";
+      echo "Selamat Pagi";
    } elseif ($hour >= 11 && $hour <= 15) {
-      echo "Selamat Siang" || "Good afternoon";
+      echo "Selamat Siang";
    } elseif ($hour >= 15 && $hour <= 17) {
-      echo "Selamat Sore" || "Good afternoon";
+      echo "Selamat Sore";
    } elseif ($hour >= 18 && $hour < 24) {
-      echo "Selamat Malam" || "Good Night";
+      echo "Selamat Malam";
    }
 }
 
