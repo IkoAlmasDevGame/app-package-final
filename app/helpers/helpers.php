@@ -118,7 +118,7 @@ function format_nomor($previx, $no)
 function format_rupiah($rp)
 {
    $jumlah = number_format($rp, 0, ",", ".");
-   $rupiah = "Rp" . $jumlah;
+   $rupiah = "Rp " . $jumlah;
 
    return $rupiah;
 }
@@ -132,7 +132,7 @@ function format_rupiah_akunting($rp)
 function format_rupiah_kwitansi($rp)
 {
    $jumlah = number_format($rp, 0, ",", ".");
-   $rupiah = "Rp" . $jumlah . ",-";
+   $rupiah = "Rp " . $jumlah . ",-";
 
    return $rupiah;
 }
