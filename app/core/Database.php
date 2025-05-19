@@ -22,6 +22,46 @@ class Database
 
    # Khusus MVC Database khusus Models
 
+   public function json_response($pesan = null, $typeError = null, $code = '')
+   {
+      header_remove();
+      http_response_code($code);
+      header("Cache-Controll: no-transform, public, max-age30, s-maxage=900");
+      header("Content-type: application/json");
+      $status = array(
+         200 => '200 OK',
+         400 => '400 Bad Request',
+         422 => '422 Unprocessable entity',
+         500 => '500 Internal server error'
+      );
+      header("Status:" . $status[$code]);
+      return json_encode(array(
+         'status' => $code < 300,
+         'message' => $pesan,
+         'type' => $typeError,
+      ));
+   }
+
+   public function LastGetError()
+   {
+      return $this->dbh->errno;
+   }
+
+   public function real_escape_string($value)
+   {
+      return mysqli_real_escape_string($this->dbh, $value);
+   }
+
+   public function close_query()
+   {
+      return mysqli_close($this->dbh);
+   }
+
+   public function queryJoin($tabel, $inisial, $join)
+   {
+      return $this->dbh->query("SELECT * FROM $tabel as $inisial " . $join . "");
+   }
+
    public function query($sql)
    {
       return $this->dbh->query($sql, MYSQLI_STORE_RESULT);
@@ -201,28 +241,25 @@ class Database
 
    # Khusus MVC Database khusus Models
 
-   public function CreateCode($tabel, $inisial)
+   public function CreateCode($tabel, $field, $inisial)
    {
-      $struktur = mysqli_query($this->dbh, "SELECT * FROM $tabel LIMIT 1");
-      $field    = mysqli_fetch_field_direct($struktur, 0)->name;
-      $panjang  = mysqli_fetch_field_direct($struktur, 0)->length;
-      $qry  = $this->dbh->query("SELECT MAX(" . $field . ") FROM " . $tabel);
-      $row  = mysqli_fetch_array($qry);
+      $struktur = $this->dbh->query("SELECT * FROM $tabel LIMIT 1");
+      $field = mysqli_fetch_field_direct($struktur, 1)->name;
+      $mysql = $this->dbh->query("SELECT MAX($field) as $field FROM $tabel order by $field desc");
+      $row = mysqli_fetch_array($mysql);
 
-      if ($row[0] == "") {
-         $angka = 0;
+      $urut = substr($row[$field], 8, 3);
+      $tambah = (int)$urut + 1;
+      $bulan = date('m');
+      $tahun = date('y');
+
+      if (strlen($tambah) == 1) {
+         return $inisial . $bulan . $tahun . '00' . $tambah;
+      } elseif (strlen($tambah) == 2) {
+         return $inisial . $bulan . $tahun . '0' . $tambah;
       } else {
-         $angka = substr($row[0], strlen($inisial));
+         return $inisial . $bulan . $tahun . $tambah;
       }
-
-      $angka++;
-      $angka = strval($angka);
-      $tmp   = "";
-      for ($i = 1; $i <= ($panjang - strlen($inisial) - strlen($angka)); $i++) {
-         $tmp = $tmp . "0";
-      }
-
-      return $inisial . $tmp . $angka;
    }
 
    public function CreateCodeAkuntansi($tabel, $id, $inisial, $index, $panjang)
