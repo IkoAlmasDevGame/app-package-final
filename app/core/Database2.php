@@ -24,9 +24,54 @@ class Database2
       }
    }
 
+   public function json_response($pesan = null, $typeError = null, $code = '')
+   {
+      header_remove();
+      http_response_code($code);
+      header("Cache-Controll: no-transform, public, max-age30, s-maxage=900");
+      header("Content-type: application/json");
+      $status = array(
+         200 => '200 OK',
+         400 => '400 Bad Request',
+         422 => '422 Unprocessable entity',
+         500 => '500 Internal server error'
+      );
+      header("Status:" . $status[$code]);
+      return json_encode(array(
+         'status' => $code < 300,
+         'message' => $pesan,
+         'type' => $typeError,
+      ));
+   }
+
+   public function LastGetError()
+   {
+      return $this->dbh2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+   }
+
+   public function LastGetErrCode()
+   {
+      return $this->dbh2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+   }
+
    public function qPrepare($sql)
    {
       $prepare = $this->dbh2->prepare($sql);
+      $prepare->execute();
       return $prepare;
+   }
+
+   public function qPrepare2($sql)
+   {
+      $prepare = $this->dbh2->prepare($sql);
+      return $prepare;
+   }
+
+   public function inc($num = 1)
+   {
+      if (!is_numeric($num)) {
+         throw new Exception('Argument supplied to inc must be a number');
+      }
+      return array("[I]" => "+" . $num);
    }
 }
