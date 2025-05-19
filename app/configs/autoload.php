@@ -1,32 +1,37 @@
 <?php
-function loadEnv($filePath)
+function loadEnv(string $path): void
 {
-   if (!file_exists($filePath)) {
-      throw new Exception("File .env tidak ditemukan.");
+   if (!file_exists($path)) {
+      throw new InvalidArgumentException(".env file not found at path: $path");
    }
 
-   $lines = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-   $env = [];
+   $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
    foreach ($lines as $line) {
-      // Mengabaikan komentar
-      if (strpos(trim($line), '#') === 0) {
+      $line = trim($line);
+      // Skip comments and empty lines
+      if ($line === '' || strpos($line, '#') === 0) {
          continue;
       }
 
-      list($key, $value) = explode('=', $line, 2);
-      $env[trim($key)] = trim($value);
+      // Parse KEY=VALUE pairs
+      if (strpos($line, '=') !== false) {
+         list($name, $value) = explode('=', $line, 2);
+
+         $name = trim($name);
+         $value = trim($value);
+
+         // Remove optional quotes around the value
+         if ((str_starts_with($value, '"') && str_ends_with($value, '"')) ||
+            (str_starts_with($value, "'") && str_ends_with($value, "'"))
+         ) {
+            $value = substr($value, 1, -1);
+         }
+
+         // Set environment variable
+         putenv("$name=$value");
+         $_ENV[$name] = $value;
+         $_SERVER[$name] = $value;
+      }
    }
-
-   return $env;
 }
-
-// Memuat file .env
-$env = loadEnv('../../.env');
-
-// Mengakses variabel
-$dbHost = $env['DB_HOST'];
-$dbName = $env['DB_NAME'];
-$dbUser  = $env['DB_USERNAME'];
-$dbPass = $env['DB_PASSWORD'];
-$dbPort = $env['DB_PORT'];
