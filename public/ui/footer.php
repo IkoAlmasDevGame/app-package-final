@@ -6,6 +6,9 @@
 <script src="<?= BASE_URL ?>dist/vendor/tinymce/tinymce.min.js"></script>
 <script src="<?= BASE_URL ?>dist/vendor/php-email-form/validate.js"></script>
 <script src="<?= BASE_URL ?>dist/js/main.js"></script>
+<script src="<?= BASE_URL ?>dist/js/bootstrap-datetimepicker.js"></script>
+<script src="<?= BASE_URL ?>dist/js/bootstrap-datetimepicker.min.js"></script>
+<script src="<?= BASE_URL ?>dist/js/locales/bootstrap-datetimepicker.id.js"></script>
 
 <!-- Template Main JS File -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
@@ -33,6 +36,19 @@ $(document).ready(function() {
    $('#datatable1').parent().addClass("table-responsive");
 });
 
+$(document).ready(function(){
+   $('.form_date').datetimepicker({
+      language: 'id',
+      weekStart: 1,
+      todayBtn: 1,
+      autoclose: 1,
+      todayHighlight: 1,
+      startView: 2,
+      minView: 2,
+      forceParse: 0
+   });
+});
+   
 $(document).ready(function() {
    $("#datatable2").DataTable({
       "responsive": true
