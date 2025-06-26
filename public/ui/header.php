@@ -11,7 +11,9 @@
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
       <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.dataTables.min.css">
       <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-      <link rel="stylesheet" href="style.css">
+      <link rel="stylesheet" crossorigin="anonymous" href="<?= BASE_URL ?>dist/css/bootstrap-datetimepicker.min.css">
+      <link rel="stylesheet" crossorigin="anonymous" href="<?= BASE_URL ?>dist/css/bootstrap-datetimepicker.css">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glyphicons-only-bootstrap@1.0.1/css/bootstrap.min.css">
       <!--  -->
       <link href="<?= BASE_URL ?>dist/vendor/bootstrap-icons/bootstrap-icons.css" crossorigin="anonymous"
          rel="stylesheet">
