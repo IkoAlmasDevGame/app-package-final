@@ -42,6 +42,64 @@ class Database
       ));
    }
 
+   public function backupFile()
+   {
+      $backup_folder = "../../../app/database/";
+      // Membuat folder backup jika belum ada
+      if (!file_exists($backup_folder)) {
+         mkdir($backup_folder, 0777, true);
+      }
+
+      // Nama file backup
+      $backup_file = $backup_folder . DB_NAME . '.sql';
+      // Membuka file backup
+      $handle = fopen($backup_file, 'w+');
+      // Header file backup
+      fwrite($handle, "-- Backup Database\n");
+      fwrite($handle, "-- Waktu Backup: " . date('Y-m-d H:i:s') . "\n");
+      fwrite($handle, "-- Database: " . DB_NAME . "\n\n");
+
+      // Mendapatkan daftar tabel
+      $tables = array();
+      $result = $this->query("SHOW TABLES");
+      while ($row = $result->fetch_row()) {
+         $tables[] = $row[0];
+      }
+
+      // Backup setiap tabel
+      foreach ($tables as $table) {
+         // Backup struktur tabel
+         fwrite($handle, "-- ----------------------------\n");
+         fwrite($handle, "-- Struktur tabel `$table`\n");
+         fwrite($handle, "-- ----------------------------\n");
+         fwrite($handle, "DROP TABLE IF EXISTS `$table`;\n");
+
+         $create_table = $this->query("SHOW CREATE TABLE `$table`");
+         $create_table_row = $create_table->fetch_row();
+         fwrite($handle, $create_table_row[1] . ";\n\n");
+
+         // Backup data tabel
+         fwrite($handle, "-- ----------------------------\n");
+         fwrite($handle, "-- Data tabel `$table`\n");
+         fwrite($handle, "-- ----------------------------\n");
+
+         $data = $this->query("SELECT * FROM `$table`");
+         while ($row = $data->fetch_assoc()) {
+            $keys = array_map('addslashes', array_keys($row));
+            $values = array_map('addslashes', array_values($row));
+
+            fwrite($handle, "INSERT INTO `$table` (`" . implode('`,`', $keys) . "`) VALUES ('" . implode("','", $values) . "');\n");
+         }
+         fwrite($handle, "\n");
+      }
+      // Menutup file
+      fclose($handle);
+      // Menutup koneksi
+      $this->close_query();
+      echo "<script>alert('Backup database berhasil! File tersimpan di: $backup_file')</script>";
+   }
+
+
    public function LastGetError()
    {
       return $this->dbh->errno;
@@ -64,7 +122,8 @@ class Database
 
    public function query($sql)
    {
-      return $this->dbh->query($sql, MYSQLI_STORE_RESULT);
+      $pesan = $this->dbh->query($sql, MYSQLI_STORE_RESULT);
+      return $pesan;
    }
 
    public function CREATE($tabel, $data)
