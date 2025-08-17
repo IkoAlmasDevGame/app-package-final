@@ -4,24 +4,33 @@ namespace core;
 
 use Exception;
 use PDO;
+use PDOException;
 
-class Database2
+class Database2 extends PDO
 {
-   protected $DB_HOST = DB_HOST;
-   protected $DB_PORT = DB_PORT;
-   protected $DB_DATABASE = DB_NAME;
-   protected $DB_USERNAME = DB_USERNAME;
-   protected $DB_PASSWORD = DB_PASSWORD;
-   protected $dbh2;
+   private $DB_HOST = DB_HOST;
+   private $DB_DATABASE = DB_DATABASE;
+   private $DB_USERNAME = DB_USERNAME;
+   private $DB_PASSWORD = DB_PASSWORD;
+   private $dbh2;
+   private static $instance = null;
 
    public function __construct()
    {
       try {
          $this->dbh2 = new PDO("mysql:host=$this->DB_HOST;dbname=$this->DB_DATABASE", $this->DB_USERNAME, $this->DB_PASSWORD);
-      } catch (Exception $e) {
+         $this->dbh2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+      } catch (PDOException $e) {
          echo "Gagal terhubung : " . $e->getMessage();
-         die;
       }
+   }
+
+   public static function getInstance()
+   {
+      if (self::$instance == null) {
+         self::$instance = new Database2();
+      }
+      return self::$instance;
    }
 
    public function json_response($pesan = null, $typeError = null, $code = '')
@@ -44,6 +53,58 @@ class Database2
       ));
    }
 
+   public function CreateCode($tabel, $field)
+   {
+      $sql = "SELECT * FROM $tabel LIMIT 1";
+      $struktur = $this->dbh2->prepare($sql);
+      $struktur->execute();
+      $mysql = $this->dbh2->prepare("SELECT MAX($field) as $field FROM $tabel order by $field desc");
+      $mysql->execute();
+      $row = $mysql->fetch();
+
+      $urut = substr($row[$field], 4, 3);
+      $tambah = (int)$urut + 1;
+      $tahun = date('y');
+
+      if (strlen($tambah) == 1) {
+         return $tahun . '00' . $tambah;
+      } elseif (strlen($tambah) == 2) {
+         return $tahun . '0' . $tambah;
+      } else {
+         return $tahun . $tambah;
+      }
+   }
+   
+   public function PrepareExecute($tabel, $where, $name){
+	   $result = $this->dbh2->prepare("SELECT * FROM $tabel WHERE $where = ?");
+	   $array = array($name);
+	   $result->execute($array);
+	   $row = $result->fetch();
+	   return $row;
+   }
+
+   public function CreateCodeInvoice($tabel, $field, $inisial)
+   {
+      $sql = "SELECT * FROM $tabel LIMIT 1";
+      $struktur = $this->dbh2->prepare($sql);
+      $struktur->execute();
+      $mysql = $this->dbh2->prepare("SELECT MAX($field) as $field FROM $tabel order by $field desc");
+      $mysql->execute();
+      $row = $mysql->fetch();
+
+      $urut = substr($row[$field], 9, 3);
+      $tambah = (int)$urut + 1;
+      $tahun = date('Y');
+
+      if (strlen($tambah) == 1) {
+         return $inisial . '-' . $tahun . '/00' . $tambah;
+      } elseif (strlen($tambah) == 2) {
+         return $inisial . '-' . $tahun . '/00' . $tambah;
+      } else {
+         return $inisial . '-' . $tahun . '/' . $tambah;
+      }
+   }
+
    public function LastGetError()
    {
       return $this->dbh2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -54,14 +115,14 @@ class Database2
       return $this->dbh2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
    }
 
-   public function qPrepare($sql)
+   public function qPrepare2($sql)
    {
       $prepare = $this->dbh2->prepare($sql);
       $prepare->execute();
       return $prepare;
    }
 
-   public function qPrepare2($sql)
+   public function qPrepare($sql)
    {
       $prepare = $this->dbh2->prepare($sql);
       return $prepare;
