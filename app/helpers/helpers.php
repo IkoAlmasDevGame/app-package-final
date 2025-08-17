@@ -177,3 +177,17 @@ function format_tanggal_strip($tgl)
 
    return $tanggal;
 }
+
+function format_tanggal2($tanggal2)
+{
+   new DateTime();
+   $date = date_create($tanggal2);
+   return date_format($date, "d/m/y");
+}
+
+function format_tanggal3($tanggal3)
+{
+   new DateTime();
+   $date = date_create($tanggal3);
+   return date_format($date, "d - M");
+}
