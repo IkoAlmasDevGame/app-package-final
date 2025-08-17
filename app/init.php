@@ -9,11 +9,13 @@ define("URL_BASE", "http://localhost/$namebase/public/");
 # App Folder : (ALL FILES) Configs, Controllers, Core, Helpers, and Models
 # Folder Configs
 require_once("configs/configs.php");
+require_once("configs/autoload.php");
 # Folder Controllers
 require_once("controllers/Example.php");
 # Folder Core
 require_once("core/Database.php");
 require_once("core/Database2.php");
+require_once("core/Server.php");
 # Folder Helpers
 require_once("helpers/helpers.php");
 # Folder Models
