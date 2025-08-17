@@ -4,16 +4,16 @@ namespace core;
 
 class Database
 {
-   protected $DB_HOST = DB_HOST;
-   protected $DB_PORT = DB_PORT;
-   protected $DB_DATABASE = DB_NAME;
-   protected $DB_USERNAME = DB_USERNAME;
-   protected $DB_PASSWORD = DB_PASSWORD;
-   protected $dbh;
+   private $DB_HOST = DB_HOST;
+   private $DB_DATABASE = DB_DATABASE;
+   private $DB_USERNAME = DB_USERNAME;
+   private $DB_PASSWORD = DB_PASSWORD;
+   private $dbh;
+   private static $instance = null;
 
    public function __construct()
    {
-      $this->dbh = mysqli_connect($this->DB_HOST, $this->DB_USERNAME, $this->DB_PASSWORD, $this->DB_DATABASE, $this->DB_PORT) or mysqli_connect_errno();
+      $this->dbh = mysqli_connect($this->DB_HOST, $this->DB_USERNAME, $this->DB_PASSWORD, $this->DB_DATABASE);
       if ($this->dbh->errno) {
          echo "database gagal terhubung";
          die;
@@ -21,6 +21,14 @@ class Database
    }
 
    # Khusus MVC Database khusus Models
+
+   public static function getInstance()
+   {
+      if (self::$instance == null) {
+         self::$instance = new Database();
+      }
+      return self::$instance;
+   }
 
    public function json_response($pesan = null, $typeError = null, $code = '')
    {
@@ -51,13 +59,13 @@ class Database
       }
 
       // Nama file backup
-      $backup_file = $backup_folder . DB_NAME . '.sql';
+      $backup_file = $backup_folder . $this->DB_DATABASE . '.sql';
       // Membuka file backup
       $handle = fopen($backup_file, 'w+');
       // Header file backup
       fwrite($handle, "-- Backup Database\n");
       fwrite($handle, "-- Waktu Backup: " . date('Y-m-d H:i:s') . "\n");
-      fwrite($handle, "-- Database: " . DB_NAME . "\n\n");
+      fwrite($handle, "-- Database: " . $this->DB_DATABASE . "\n\n");
 
       // Mendapatkan daftar tabel
       $tables = array();
@@ -96,7 +104,7 @@ class Database
       fclose($handle);
       // Menutup koneksi
       $this->close_query();
-      echo "<script>alert('Backup database berhasil! File tersimpan di: $backup_file')</script>";
+      echo "<script>location.href = '../ui/header.php?page=beranda';</script>";
    }
 
 
@@ -112,7 +120,10 @@ class Database
 
    public function close_query()
    {
-      return mysqli_close($this->dbh);
+      if ($this->dbh) {
+         mysqli_close($this->dbh);
+         return self::$instance = null;
+      }
    }
 
    public function queryJoin($tabel, $inisial, $join)
@@ -142,7 +153,7 @@ class Database
    public function SELECT($tabel)
    {
       $sql = "SELECT * FROM $tabel";
-      $result = $this->dbh->query($sql);
+      $result = $this->dbh->prepare($sql);
       return $result;
    }
 
@@ -164,7 +175,7 @@ class Database
    public function SELECT_WHERE($tabel, $where, $name)
    {
       $sql = "SELECT * FROM $tabel WHERE $where = '$name'";
-      $result = $this->dbh->query($sql, MYSQLI_STORE_RESULT);
+      $result = $this->dbh->query($sql);
       return $result;
       # under English
       # SELECT WHERE on the core database is to search for data desired by the website programmer and must match the database table row example like id_admin or others.
@@ -300,24 +311,43 @@ class Database
 
    # Khusus MVC Database khusus Models
 
-   public function CreateCode($tabel, $field, $inisial)
+   public function CreateCode($tabel, $field)
    {
       $struktur = $this->dbh->query("SELECT * FROM $tabel LIMIT 1");
       $field = mysqli_fetch_field_direct($struktur, 1)->name;
       $mysql = $this->dbh->query("SELECT MAX($field) as $field FROM $tabel order by $field desc");
       $row = mysqli_fetch_array($mysql);
 
-      $urut = substr($row[$field], 8, 3);
+      $urut = substr($row[$field], 4, 3);
       $tambah = (int)$urut + 1;
-      $bulan = date('m');
       $tahun = date('y');
 
       if (strlen($tambah) == 1) {
-         return $inisial . $bulan . $tahun . '00' . $tambah;
+         return $tahun . '00' . $tambah;
       } elseif (strlen($tambah) == 2) {
-         return $inisial . $bulan . $tahun . '0' . $tambah;
+         return $tahun . '0' . $tambah;
       } else {
-         return $inisial . $bulan . $tahun . $tambah;
+         return $tahun . $tambah;
+      }
+   }
+
+   public function CreateCodeInisial($tabel, $field, $inisial)
+   {
+      $struktur = $this->dbh->query("SELECT * FROM $tabel LIMIT 1");
+      $field = mysqli_fetch_field_direct($struktur, 1)->name;
+      $mysql = $this->dbh->query("SELECT MAX($field) as $field FROM $tabel order by $field desc");
+      $row = mysqli_fetch_array($mysql);
+
+      $urut = substr($row[$field], 9, 3);
+      $tahun = date('y');
+      $bulan = date('m');
+
+      if (strlen((int)$urut + 1) == 1) {
+         return $inisial . $bulan . $tahun . '00' . (int)$urut + 1;
+      } elseif (strlen((int)$urut + 1) == 2) {
+         return $inisial . $bulan . $tahun . '0' . (int)$urut + 1;
+      } else {
+         return $inisial . $bulan . $tahun . (int)$urut + 1;
       }
    }
 
