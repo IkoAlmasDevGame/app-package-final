@@ -1,11 +1,11 @@
 <?php
-define("DB_HOST", "localhost");
-define("DB_PORT", "3306");
-define("DB_NAME", "db_si_wip");
-define("DB_USERNAME", "root");
+# time default indonesia
+
+define("DB_HOST", "");
+define("DB_DATABASE", "");
+define("DB_USERNAME", "");
 define("DB_PASSWORD", "");
 
-# time default indonesia
 date_default_timezone_set("Asia/Jakarta");
 function salam()
 {
