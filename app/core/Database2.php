@@ -53,6 +53,27 @@ class Database2 extends PDO
       ));
    }
 
+   public function CreateCodeAuto($tabel, $field)
+   {
+      $sql = "SELECT * FROM $tabel LIMIT 1";
+      $struktur = $this->dbh2->prepare($sql);
+      $struktur->execute();
+      $mysql = $this->dbh2->prepare("SELECT MAX($field) as $field FROM $tabel order by $field desc");
+      $mysql->execute();
+      $row = $mysql->fetch();
+
+      $urut = substr($row[$field], 0, 7);
+      $tambah = (int)$urut + 1;
+
+      if (strlen($tambah) == 1) {
+         return $tambah;
+      } elseif (strlen($tambah) == 2) {
+         return $tambah;
+      } else {
+         return $tambah;
+      }
+   }
+
    public function CreateCode($tabel, $field)
    {
       $sql = "SELECT * FROM $tabel LIMIT 1";
@@ -74,13 +95,22 @@ class Database2 extends PDO
          return $tahun . $tambah;
       }
    }
-   
-   public function PrepareExecute($tabel, $where, $name){
-	   $result = $this->dbh2->prepare("SELECT * FROM $tabel WHERE $where = ?");
-	   $array = array($name);
-	   $result->execute($array);
-	   $row = $result->fetch();
-	   return $row;
+
+   public function PrepareExecute($tabel, $where, $name)
+   {
+      $result = $this->dbh2->prepare("SELECT * FROM $tabel WHERE $where = ?");
+      $array = array($name);
+      $result->execute($array);
+      $row = $result->fetch();
+      return $row;
+   }
+
+   public function DeleteExecute($tabel, $where, $name)
+   {
+      $result = $this->dbh2->prepare("DELETE FROM $tabel WHERE $where = ?");
+      $array = array($name);
+      $result->execute($array);
+      return $result;
    }
 
    public function CreateCodeInvoice($tabel, $field, $inisial)
@@ -113,6 +143,34 @@ class Database2 extends PDO
    public function LastGetErrCode()
    {
       return $this->dbh2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+   }
+
+   function redirect($alamat)
+   {
+      echo "<script>document.location.href='../ui/header.php?page=$alamat'</script>";
+   }
+
+   public function Create($table, array $field)
+   {
+      $sql = "INSERT INTO $table SET ";
+      foreach ($field as $key => $value) {
+         $sql .= "$key = '$value',";
+      }
+      $sql = rtrim($sql, ',');
+      $jalan = $this->qPrepare($sql);
+      $jalan->execute(array($field));
+   }
+
+   public function Update($table, array $field, $where)
+   {
+      $sql = "UPDATE $table SET ";
+      foreach ($field as $key => $value) {
+         $sql .= "$key = '$value',";
+      }
+      $sql = rtrim($sql, ',');
+      $sql .= " WHERE $where";
+      $jalan = $this->qPrepare($sql);
+      $jalan->execute(array($field, $where));
    }
 
    public function qPrepare2($sql)

@@ -9,6 +9,6 @@ class Example
    protected $konfig;
    public function __construct()
    {
-      $this->konfig = new Example_model();
+      $this->konfig = Example_model::getInstance();
    }
 }

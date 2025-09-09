@@ -64,12 +64,68 @@ function Indonesia2Tgl($tanggal)
    return $tanggal;
 }
 
-function hitungHari($myDate1, $myDate2)
+function hitungHari($myDate2)
 {
-   $myDate1 = strtotime($myDate1);
-   $myDate2 = strtotime($myDate2);
+   $today = new DateTime();
+   $tanggalBerakhir = new DateTime($myDate2);
+   $selisih = $today->diff($tanggalBerakhir);
+   $sisaHari = $selisih->days;
+   if ($tanggalBerakhir > $today) {
+      $status = "<span class=\"\"></span>";
+      $detail = "Berlaku " . $sisaHari . " hari lagi";
+   } elseif ($tanggalBerakhir->format("Y-m-d") == $today->format("Y-m-d")) {
+      $status = "<span class=\"\"></span>";
+      $detail = "Masa berlaku berakhir hari ini";
+      $sisaHari = 0;
+   } else {
+      $status = "<span class=\"\"></span>";
+      $detail = $tanggalBerakhir->diff($today)->days === "" ? $today->diff($tanggalBerakhir)->days : "";
+   }
+   return $detail . "<br>" . $status;
+}
 
-   return ($myDate2 - $myDate1) / (24 * 3600);
+function HitungPeminjaman($myDate2)
+{
+   $today = new DateTime();
+   $tanggalBerakhir = new DateTime($myDate2);
+   $selisih = $today->diff($tanggalBerakhir);
+   $sisaHari = $selisih->days;
+   if ($tanggalBerakhir > $today) {
+      $status = "<span class=\"\"></span>";
+      $detail = "" . $sisaHari . " Days";
+   } elseif ($today->format("Y-m-d") == $tanggalBerakhir->format("Y-m-d")) {
+      $status = "<span class=\"\"></span>";
+      $sisaHari = 0;
+      $detail = "" . $sisaHari . " Days";
+   } else {
+      $status = "<span class=\"\"></span>";
+      $detail = $tanggalBerakhir->diff($today)->days === "" ? $today->diff($tanggalBerakhir)->days : "";
+   }
+   return $detail . $status;
+}
+
+function status($tanggalDaftar, $tanggalBerakhir)
+{
+   $today = new DateTime();
+   $tanggalDaftar = new DateTime($tanggalDaftar);
+   $tanggalBerakhir = new DateTime($tanggalBerakhir);
+   if ($tanggalBerakhir > $today && $tanggalBerakhir > $tanggalDaftar) {
+      $status = "<span class='text-success fst-normal fw-normal'>Masih Berlaku</span>";
+   } elseif ($tanggalBerakhir->format("Y-m-d") == $today->format("Y-m-d") && $tanggalBerakhir->format("Y-m-d") == $tanggalDaftar->format("Y-m-d")) {
+      $status = "<span class='text-success fst-normal fw-normal'>Masih Sisa Berlaku</span>";
+   } else {
+      $status = "<span class='text-danger fst-normal fw-normal'>EXPIRED</span>";
+   }
+   return $status;
+}
+
+function tanggal($tanggalDaftar, $tanggalBerakhir)
+{
+   $tanggalDaftar = new DateTime($tanggalDaftar);
+   $tanggalBerakhir = new DateTime($tanggalBerakhir);
+   $formatTanggalDaftar = $tanggalDaftar->format('d-m-Y');
+   $formatTanggalBerakhir = $tanggalBerakhir->format('d-m-Y');
+   return $formatTanggalDaftar . " s/d " . $formatTanggalBerakhir;
 }
 
 # Fungsi untuk membuat format rupiah pada angka (uang)
@@ -82,7 +138,7 @@ function format_angka($angka)
 function angkaTerbilang($x)
 {
    $abil = array("", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas");
-   if ($x < 12)
+   if ($x < 22)
       return " " . $abil[$x];
    elseif ($x < 20)
       return angkaTerbilang($x - 10) . " belas";
@@ -149,12 +205,12 @@ function format_tanggal($tgl)
    return $tanggal;
 }
 
-function format_tanggal_lahir($tpt, $tgl)
+function format_tanggal_lahir($tgl)
 {
    $blns = array("", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des");
    $tgls = getdate(strtotime($tgl));
    $hr = (strlen($tgls['mday']) == 1 ? "0" . $tgls['mday'] : $tgls['mday']);
-   $tanggal = $tpt . ", " . $hr . "-" . $blns[$tgls['mon']] . "-" . $tgls['year'];
+   $tanggal = $hr . "-" . $blns[$tgls['mon']] . "-" . $tgls['year'];
 
    return $tanggal;
 }
@@ -182,7 +238,7 @@ function format_tanggal2($tanggal2)
 {
    new DateTime();
    $date = date_create($tanggal2);
-   return date_format($date, "d/m/y");
+   return date_format($date, "d/m/Y");
 }
 
 function format_tanggal3($tanggal3)
