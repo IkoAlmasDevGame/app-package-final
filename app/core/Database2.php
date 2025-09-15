@@ -147,32 +147,9 @@ class Database2 extends PDO
 
    function redirect($alamat)
    {
-	   header("Location:".URL_BASE."");
+      header("Location:" . URL_BASE . "");
    }
 
-   public function Create($table, array $field)
-   {
-      $sql = "INSERT INTO $table SET ";
-      foreach ($field as $key => $value) {
-         $sql .= "$key = '$value',";
-      }
-      $sql = rtrim($sql, ',');
-      $jalan = $this->qPrepare($sql);
-      $jalan->execute(array($field));
-   }
-
-   public function Update($table, array $field, $where)
-   {
-      $sql = "UPDATE $table SET ";
-      foreach ($field as $key => $value) {
-         $sql .= "$key = '$value',";
-      }
-      $sql = rtrim($sql, ',');
-      $sql .= " WHERE $where";
-      $jalan = $this->qPrepare($sql);
-      $jalan->execute(array($field, $where));
-   }
-      
    public function Create($table, array $field)
    {
       $columns = array_keys($field);
@@ -198,7 +175,7 @@ class Database2 extends PDO
 
       $stmt->execute($params);
    }
-   
+
    public function cekdata($table)
    {
       $prepare = $this->dbh2->prepare("SELECT * FROM $table");
@@ -206,7 +183,7 @@ class Database2 extends PDO
       $prepare->rowCount();
       return $prepare;
    }
-   
+
    public function jPrepare($tabel, $field, $join)
    {
       $prepare = $this->dbh2->prepare("SELECT * FROM $tabel as $field $join");
