@@ -147,7 +147,7 @@ class Database2 extends PDO
 
    function redirect($alamat)
    {
-      echo "<script>document.location.href='../ui/header.php?page=$alamat'</script>";
+	   header("Location:".URL_BASE."");
    }
 
    public function Create($table, array $field)
@@ -172,17 +172,51 @@ class Database2 extends PDO
       $jalan = $this->qPrepare($sql);
       $jalan->execute(array($field, $where));
    }
-
-   public function qPrepare2($sql)
+      
+   public function Create($table, array $field)
    {
-      $prepare = $this->dbh2->prepare($sql);
+      $columns = array_keys($field);
+      $columnsList = implode(', ', $columns);
+      $placeholders = rtrim(str_repeat('?, ', count($columns)), ', ');
+      $sql = "INSERT INTO $table ($columnsList) VALUES ($placeholders)";
+      $stmt = $this->qPrepare($sql);
+      $stmt->execute(array_values($field));
+   }
+
+   public function Update($table, array $field, $where, array $whereParams = [])
+   {
+      $columns = array_keys($field);
+      $setParts = array_map(fn($col) => "$col = ?", $columns);
+      $setString = implode(', ', $setParts);
+
+      $sql = "UPDATE $table SET $setString WHERE $where";
+
+      $stmt = $this->qPrepare($sql);
+
+      // Gabungkan nilai field dan whereParams untuk positional binding
+      $params = array_merge(array_values($field), $whereParams);
+
+      $stmt->execute($params);
+   }
+   
+   public function cekdata($table)
+   {
+      $prepare = $this->dbh2->prepare("SELECT * FROM $table");
+      $prepare->execute();
+      $prepare->rowCount();
+      return $prepare;
+   }
+   
+   public function jPrepare($tabel, $field, $join)
+   {
+      $prepare = $this->dbh2->prepare("SELECT * FROM $tabel as $field $join");
       $prepare->execute();
       return $prepare;
    }
 
    public function qPrepare($sql)
    {
-      $prepare = $this->dbh2->prepare($sql);
+      $prepare = $this->dbh2->prepare("SELECT * FROM $sql");
       return $prepare;
    }
 

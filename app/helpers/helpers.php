@@ -89,7 +89,7 @@ function HitungPeminjaman($myDate2)
    $today = new DateTime();
    $tanggalBerakhir = new DateTime($myDate2);
    $selisih = $today->diff($tanggalBerakhir);
-   $sisaHari = $selisih->days;
+   $sisaHari = $selisih->days + 1;
    if ($tanggalBerakhir > $today) {
       $status = "<span class=\"\"></span>";
       $detail = "" . $sisaHari . " Days";
@@ -174,7 +174,7 @@ function format_nomor($previx, $no)
 function format_rupiah($rp)
 {
    $jumlah = number_format($rp, 0, ",", ".");
-   $rupiah = "Rp " . $jumlah;
+   $rupiah = "Rp " . $jumlah . ",-";
 
    return $rupiah;
 }
@@ -196,8 +196,8 @@ function format_rupiah_kwitansi($rp)
 # Format Tanggal
 function format_tanggal($tgl)
 {
-   $blns = array("", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des");
-   $hrs = array("Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab");
+   $blns = array("", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember");
+   $hrs = array("Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu");
    $tgls = getdate(strtotime($tgl));
    $hr = (strlen($tgls['mday']) == 1 ? "0" . $tgls['mday'] : $tgls['mday']);
    $tanggal = $hrs[$tgls['wday']] . ", " . $hr . "-" . $blns[$tgls['mon']] . "-" . $tgls['year'];

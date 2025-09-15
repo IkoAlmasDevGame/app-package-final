@@ -2,7 +2,7 @@
 
 namespace model;
 
-use core\Database;
+use core\Database2;
 
 class Example_model
 {
@@ -12,7 +12,7 @@ class Example_model
 
    public function __construct()
    {
-      $this->dbh = new Database;
+      $this->dbh = Database2::getInstance();
    }
 
    public static function getInstance()
