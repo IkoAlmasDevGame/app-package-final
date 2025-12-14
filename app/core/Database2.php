@@ -8,18 +8,17 @@ use PDOException;
 
 class Database2 extends PDO
 {
-   private $DB_HOST = DB_HOST;
-   private $DB_DATABASE = DB_DATABASE;
-   private $DB_USERNAME = DB_USERNAME;
-   private $DB_PASSWORD = DB_PASSWORD;
    private $dbh2;
+   protected $DB_HOST = DB_HOST;
+   protected $DB_DATABASE = DB_DATABASE;
+   protected $DB_USERNAME = DB_USERNAME;
+   protected $DB_PASSWORD = DB_PASSWORD;
    private static $instance = null;
 
    public function __construct()
    {
       try {
-         $this->dbh2 = new PDO("mysql:host=$this->DB_HOST;dbname=$this->DB_DATABASE", $this->DB_USERNAME, $this->DB_PASSWORD);
-         $this->dbh2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+         $this->dbh2 = new PDO(dsn: "mysql:host=$this->DB_HOST;dbname=$this->DB_DATABASE", username: $this->DB_USERNAME, password: $this->DB_PASSWORD);
       } catch (PDOException $e) {
          echo "Gagal terhubung : " . $e->getMessage();
       }
@@ -74,7 +73,7 @@ class Database2 extends PDO
       }
    }
 
-   public function CreateCode($tabel, $field)
+   public function CreateCode($tabel, $field, $inisial)
    {
       $sql = "SELECT * FROM $tabel LIMIT 1";
       $struktur = $this->dbh2->prepare($sql);
@@ -85,14 +84,14 @@ class Database2 extends PDO
 
       $urut = substr($row[$field], 4, 3);
       $tambah = (int)$urut + 1;
-      $tahun = date('y');
+      $tahun = date('Y');
 
       if (strlen($tambah) == 1) {
-         return $tahun . '00' . $tambah;
+         return $inisial.$tahun . '00' . $tambah;
       } elseif (strlen($tambah) == 2) {
-         return $tahun . '0' . $tambah;
+         return $inisial.$tahun . '0' . $tambah;
       } else {
-         return $tahun . $tambah;
+         return $inisial.$tahun . $tambah;
       }
    }
 
@@ -104,35 +103,73 @@ class Database2 extends PDO
       $row = $result->fetch();
       return $row;
    }
+   
+   public function PrepareExecute2($tabel, $where, $name, $where2, $name2)
+   {
+      $result = $this->dbh2->prepare("SELECT * FROM $tabel WHERE $where = ? and $where2 = ?");
+      $array = array($name, $name2);
+      $result->execute($array);
+      $row = $result->fetch();
+      return $row;
+   }
 
    public function DeleteExecute($tabel, $where, $name)
    {
       $result = $this->dbh2->prepare("DELETE FROM $tabel WHERE $where = ?");
       $array = array($name);
       $result->execute($array);
-      return $result;
+      return $result === 1 ? true : false;
    }
 
    public function CreateCodeInvoice($tabel, $field, $inisial)
    {
-      $sql = "SELECT * FROM $tabel LIMIT 1";
-      $struktur = $this->dbh2->prepare($sql);
-      $struktur->execute();
-      $mysql = $this->dbh2->prepare("SELECT MAX($field) as $field FROM $tabel order by $field desc");
-      $mysql->execute();
-      $row = $mysql->fetch();
-
-      $urut = substr($row[$field], 9, 3);
-      $tambah = (int)$urut + 1;
+      // Assuming $this->dbh is a PDO instance
+      $stmt = $this->dbh2->prepare("SELECT MAX($field) as max_val FROM $tabel");
+      $stmt->execute();
+      $row = $stmt->fetch(PDO::FETCH_ASSOC);
+      
       $tahun = date('Y');
-
-      if (strlen($tambah) == 1) {
-         return $inisial . '-' . $tahun . '/00' . $tambah;
-      } elseif (strlen($tambah) == 2) {
-         return $inisial . '-' . $tahun . '/00' . $tambah;
+      $prefix = $inisial . $tahun;
+      
+      if ($row['max_val']) {
+          $num_part = substr($row['max_val'], strlen($prefix));
+          $urut = (int)$num_part;
       } else {
-         return $inisial . '-' . $tahun . '/' . $tambah;
+          $urut = 0;
       }
+
+      $tambah = $urut + 1;
+
+      // Always pad the number to 3 digits (or more if necessary)
+      $code = $prefix . str_pad($tambah, 3, '0', STR_PAD_LEFT);
+
+      return $code;
+   }
+
+
+   public function CreateCodeInvoice2($tabel, $field, $inisial)
+   {
+    // Assuming $this->dbh is a PDO instance
+    $stmt = $this->dbh2->prepare("SELECT MAX($field) as max_val FROM $tabel");
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $tahun = date('Ymd');
+    $prefix = $inisial . $tahun;
+
+    if ($row['max_val']) {
+        $num_part = substr($row['max_val'], strlen($prefix));
+        $urut = (int)$num_part;
+    } else {
+        $urut = 0;
+    }
+
+    $tambah = $urut + 1;
+
+    // Always pad the number to 3 digits (or more if necessary)
+    $code = $prefix . str_pad($tambah, 3, '0', STR_PAD_LEFT);
+
+    return $code;
    }
 
    public function LastGetError()
@@ -147,20 +184,26 @@ class Database2 extends PDO
 
    function redirect($alamat)
    {
-      header("Location:" . URL_BASE . "");
+      header("Location:" . URL_BASE . $alamat);
+	  exit(0);
+   }
+   function redirect2($alamat, $alert)
+   {
+      header("Location:" . URL_BASE . $alamat . "&msg=".urlencode($alert));
+      exit(0);
    }
 
-   public function Create($table, array $field)
+   public function Create($table, array $field): void
    {
       $columns = array_keys($field);
       $columnsList = implode(', ', $columns);
       $placeholders = rtrim(str_repeat('?, ', count($columns)), ', ');
       $sql = "INSERT INTO $table ($columnsList) VALUES ($placeholders)";
-      $stmt = $this->qPrepare($sql);
-      $stmt->execute(array_values($field));
+      $stmt = $this->qPrepare2($sql);
+      $stmt->execute(array_values($field)) === 1 ? true : false;
    }
 
-   public function Update($table, array $field, $where, array $whereParams = [])
+   public function Update($table, array $field, $where, array $whereParams = []): void
    {
       $columns = array_keys($field);
       $setParts = array_map(fn($col) => "$col = ?", $columns);
@@ -168,12 +211,12 @@ class Database2 extends PDO
 
       $sql = "UPDATE $table SET $setString WHERE $where";
 
-      $stmt = $this->qPrepare($sql);
+      $stmt = $this->qPrepare2($sql);
 
       // Gabungkan nilai field dan whereParams untuk positional binding
       $params = array_merge(array_values($field), $whereParams);
-
-      $stmt->execute($params);
+      
+      $stmt->execute($params) === 1 ? true : false;
    }
 
    public function cekdata($table)
@@ -194,6 +237,11 @@ class Database2 extends PDO
    public function qPrepare($sql)
    {
       $prepare = $this->dbh2->prepare("SELECT * FROM $sql");
+      return $prepare;
+   }
+   public function qPrepare2($sql)
+   {
+      $prepare = $this->dbh2->prepare($sql);
       return $prepare;
    }
 

@@ -13,7 +13,7 @@ class Database
 
    public function __construct()
    {
-      $this->dbh = mysqli_connect($this->DB_HOST, $this->DB_USERNAME, $this->DB_PASSWORD, $this->DB_DATABASE);
+      $this->dbh = mysqli_connect(hostname: $this->DB_HOST, username: $this->DB_USERNAME, password: $this->DB_PASSWORD, database: $this->DB_DATABASE, port: "3306");
       if ($this->dbh->errno) {
          echo "database gagal terhubung";
          die;
@@ -138,17 +138,44 @@ class Database
    }
 
    public function CREATE($tabel, $data)
-   {
-      foreach ($data as $field => $value) {
-         $values[] = "'" . addslashes($data[$field]) . "'";
-         $fields[] = "'" . $field . "'";
-      }
-      $value_list = join(",", $values);
-      $field_list = join(",", $fields);
-      $query = "INSERT INTO " . $tabel . " (" . $field_list . ") VALUES (" . $value_list . ")";
-      $hasil = $this->dbh->query($query);
-      return $hasil;
-   }
+{
+    if (empty($data)) {
+        return false; // Tidak ada data
+    }
+    
+    $fields = array_keys($data);
+    $placeholders = str_repeat('?,', count($fields) - 1) . '?';
+    $field_list = implode(',', array_map(function($field) { return "`$field`"; }, $fields));
+    
+    $query = "INSERT INTO `$tabel` ($field_list) VALUES ($placeholders)";
+    
+    // Gunakan mysqli_prepare
+    $stmt = mysqli_prepare($this->dbh, $query);
+    if (!$stmt) {
+        return false;
+    }
+    
+    // Tentukan tipe data (s = string, i = int, d = double)
+    $types = '';
+    $values = [];
+    foreach ($data as $value) {
+        if (is_int($value)) {
+            $types .= 'i';
+        } elseif (is_float($value)) {
+            $types .= 'd';
+        } else {
+            $types .= 's';
+        }
+        $values[] = $value;
+    }
+    
+    mysqli_stmt_bind_param($stmt, $types, ...$values);
+    $result = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+    
+    return $result ? true : false;
+}
+
 
    public function SELECT($tabel)
    {
@@ -159,18 +186,63 @@ class Database
 
    public function UPDATE($tabel, $data, $where)
    {
-      foreach ($where as $f_where => $v_where) {
-         $vws[] = "'" . $f_where . "' = '" . addslashes($where[$f_where]) . "'";
-      }
-      foreach ($data as $field => $value) {
-         $dt[] = "'" . $field . "' = '" . addslashes($data[$field]) . "'";
-      }
-      $data_list = join(",", $dt);
-      $where_list = join(" AND ", $vws);
-      $query = "UPDATE $tabel SET $data_list WHERE $where_list";
-      $hasil = $this->dbh->query($query);
-      return $hasil;
+    if (empty($data) || empty($where)) {
+        return false; // Tidak ada data atau kondisi
+    }
+    
+    // Bangun SET clause
+    $set_parts = [];
+    $set_values = [];
+    $set_types = '';
+    foreach ($data as $field => $value) {
+        $set_parts[] = "`$field` = ?";
+        if (is_int($value)) {
+            $set_types .= 'i';
+        } elseif (is_float($value)) {
+            $set_types .= 'd';
+        } else {
+            $set_types .= 's';
+        }
+        $set_values[] = $value;
+    }
+    $set_clause = implode(", ", $set_parts);
+    
+    // Bangun WHERE clause
+    $where_parts = [];
+    $where_values = [];
+    $where_types = '';
+    foreach ($where as $field => $value) {
+        $where_parts[] = "`$field` = ?";
+        if (is_int($value)) {
+            $where_types .= 'i';
+        } elseif (is_float($value)) {
+            $where_types .= 'd';
+        } else {
+            $where_types .= 's';
+        }
+        $where_values[] = $value;
+    }
+    $where_clause = implode(" AND ", $where_parts);
+    
+    $query = "UPDATE `$tabel` SET $set_clause WHERE $where_clause";
+    
+    // Gunakan mysqli_prepare
+    $stmt = mysqli_prepare($this->dbh, $query);
+    if (!$stmt) {
+        return false;
+    }
+    
+    // Gabungkan tipe dan nilai
+    $all_types = $set_types . $where_types;
+    $all_values = array_merge($set_values, $where_values);
+    
+    mysqli_stmt_bind_param($stmt, $all_types, ...$all_values);
+    $result = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+    
+    return $result ? true : false;
    }
+
 
    public function SELECT_WHERE($tabel, $where, $name)
    {
@@ -311,45 +383,78 @@ class Database
 
    # Khusus MVC Database khusus Models
 
-   public function CreateCode($tabel, $field)
+   public function CreateCode($tabel, $field, $inisial)
    {
-      $struktur = $this->dbh->query("SELECT * FROM $tabel LIMIT 1");
-      $field = mysqli_fetch_field_direct($struktur, 1)->name;
-      $mysql = $this->dbh->query("SELECT MAX($field) as $field FROM $tabel order by $field desc");
-      $row = mysqli_fetch_array($mysql);
+    // Assuming $this->dbh is a PDO instance
+    $stmt = $this->dbh->query("SELECT MAX($field) as max_val FROM $tabel");
+    $row = $stmt->fetch_assoc();
 
-      $urut = substr($row[$field], 4, 3);
-      $tambah = (int)$urut + 1;
-      $tahun = date('y');
+    $tahun = date('Y');
+    $prefix = $inisial . $tahun;
 
-      if (strlen($tambah) == 1) {
-         return $tahun . '00' . $tambah;
-      } elseif (strlen($tambah) == 2) {
-         return $tahun . '0' . $tambah;
-      } else {
-         return $tahun . $tambah;
-      }
+    if ($row['max_val']) {
+        $num_part = substr($row['max_val'], strlen($prefix));
+        $urut = (int)$num_part;
+    } else {
+        $urut = 0;
+    }
+
+    $tambah = $urut + 1;
+
+    // Always pad the number to 3 digits (or more if necessary)
+    $code = $prefix . str_pad($tambah, 3, '0', STR_PAD_LEFT);
+
+    return $code;
    }
+
 
    public function CreateCodeInisial($tabel, $field, $inisial)
    {
+      // Query to get table structure (to dynamically determine the field name)
       $struktur = $this->dbh->query("SELECT * FROM $tabel LIMIT 1");
-      $field = mysqli_fetch_field_direct($struktur, 1)->name;
-      $mysql = $this->dbh->query("SELECT MAX($field) as $field FROM $tabel order by $field desc");
+      if (!$struktur) {
+          // Handle query error (e.g., table doesn't exist)
+          return false; // Or throw an exception
+      }
+    
+      // Get all fields and use the second one (index 1). If only one field, use index 0.
+      $fields = mysqli_fetch_fields($struktur);
+      $fieldIndex = isset($fields[1]) ? 1 : 0; // Default to first if no second field
+      $field = $fields[$fieldIndex]->name; // Overwrites the passed $field parameter
+    
+      // Query to get the MAX value of the field
+      $mysql = $this->dbh->query("SELECT MAX($field) as $field FROM $tabel ORDER BY $field DESC");
+      if (!$mysql) {
+          // Handle query error
+          return false;
+      }
+
       $row = mysqli_fetch_array($mysql);
 
-      $urut = substr($row[$field], 9, 3);
-      $tahun = date('y');
-      $bulan = date('m');
-
-      if (strlen((int)$urut + 1) == 1) {
-         return $inisial . $bulan . $tahun . '00' . (int)$urut + 1;
-      } elseif (strlen((int)$urut + 1) == 2) {
-         return $inisial . $bulan . $tahun . '0' . (int)$urut + 1;
+      // Handle case where table is empty (MAX returns null)
+      if ($row[$field] === null) {
+          $urut = 0;
       } else {
-         return $inisial . $bulan . $tahun . (int)$urut + 1;
+          // Extract the last 3 characters (assuming the code format is prefix + MM + YY + 3-digit number)
+          $urut = (int)substr($row[$field], 9, 3);
+      }
+    
+      $tahun = date('y'); // 2-digit year
+      $bulan = date('m'); // Month with leading zero
+    
+      $nextUrut = $urut + 1;
+      $nextUrutStr = (string)$nextUrut;
+    
+      // Pad the number based on its length
+      if (strlen($nextUrutStr) == 1) {
+          return $inisial . $bulan . $tahun . '00' . $nextUrutStr;
+      } elseif (strlen($nextUrutStr) == 2) {
+          return $inisial . $bulan . $tahun . '0' . $nextUrutStr;
+      } else {
+       return $inisial . $bulan . $tahun . $nextUrutStr;
       }
    }
+
 
    public function CreateCodeAkuntansi($tabel, $id, $inisial, $index, $panjang)
    {
