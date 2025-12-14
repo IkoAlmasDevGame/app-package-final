@@ -1,11 +1,12 @@
 <?php
 require_once "../../../app/init.php";
+loadEnv("../../.env");
 if (isset($_SESSION['status'])) {
 } else {
    echo "<script lang='javascript'>
     window.setTimeout(() => {
         alert('Maaf anda gagal masuk ke halaman utama ...'),
-        document.location.href='../index.php'
+        document.location.href='../../index.php'
     }, 3000);
     </script>";
    die;
