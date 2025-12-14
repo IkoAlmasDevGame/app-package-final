@@ -18,7 +18,8 @@ class Database2 extends PDO
    public function __construct()
    {
       try {
-         $this->dbh2 = new PDO(dsn: "mysql:host=$this->DB_HOST;dbname=$this->DB_DATABASE", username: $this->DB_USERNAME, password: $this->DB_PASSWORD);
+         $this->dbh2 = new PDO("mysql:host=$this->DB_HOST;dbname=$this->DB_DATABASE", $this->DB_USERNAME, $this->DB_PASSWORD);
+         $this->dbh2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
       } catch (PDOException $e) {
          echo "Gagal terhubung : " . $e->getMessage();
       }

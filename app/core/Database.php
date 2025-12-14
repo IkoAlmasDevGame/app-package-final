@@ -13,7 +13,7 @@ class Database
 
    public function __construct()
    {
-      $this->dbh = mysqli_connect(hostname: $this->DB_HOST, username: $this->DB_USERNAME, password: $this->DB_PASSWORD, database: $this->DB_DATABASE, port: "3306");
+      $this->dbh = mysqli_connect($this->DB_HOST, $this->DB_USERNAME, $this->DB_PASSWORD, $this->DB_DATABASE, port: "3306");
       if ($this->dbh->errno) {
          echo "database gagal terhubung";
          die;

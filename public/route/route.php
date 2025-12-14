@@ -1,23 +1,26 @@
 <?php
 require_once "../../../app/init.php";
+loadEnv("../../.env");
 if (isset($_SESSION['status'])) {
 } else {
    echo "<script lang='javascript'>
     window.setTimeout(() => {
         alert('Maaf anda gagal masuk ke halaman utama ...'),
-        document.location.href='../index.php'
+        document.location.href='../../index.php'
     }, 3000);
     </script>";
    die;
-   exit(0);
 }
-# Files Controllers and Files Models
-$cmb = new core\Database();
-# Files Models
-$Example = new model\Example_model();
+# Files Controllers and Files Models and Core
+use core\Database;
+use core\Database2;
+use models\Example_model;
+# Files include
+$dbInput = Database::getInstance();
+$dbInput2 = Database2::getInstance();
+$ExampleModel = Example_model::getInstance();
 # Files Controllers
-$exampling = new controllers\Example();
-#
+$Example = new controllers\Example();
 # Page Headers
 if (!isset($_GET['page'])) {
 } else {
