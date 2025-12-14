@@ -1,8 +1,4 @@
 <?php
-# under indonesian
-# nama folder untuk website anda. 
-# under english
-# folder name for your website.
 $namebase = "";
 define("BASE_URL", "http://localhost/$namebase/");
 define("URL_BASE", "http://localhost/$namebase/public/");
