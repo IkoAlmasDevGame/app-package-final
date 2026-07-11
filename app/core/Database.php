@@ -137,8 +137,13 @@ class Database
       return $pesan;
    }
 
+   public function prepare($sql)
+   {
+      return $this->dbh->prepare($sql);
+   }
+
    public function CREATE($tabel, $data)
-{
+   {
     if (empty($data)) {
         return false; // Tidak ada data
     }
@@ -479,79 +484,5 @@ class Database
       }
 
       return $id_baru;
-   }
-
-   public function form_input($type, $inputmode = null, $dataToggle = null, $dataTarget = null, $maxlength = null, $class, $name, $placeholder, $id = null, $value = null)
-   {
-      # example simple no array
-      $html = "<input type='$type' inputmode='$inputmode' maxlength='$maxlength' data-bs-toggle='$dataToggle' data-bs-target='$dataTarget' class='$class' name='$name' placeholder='$placeholder' id='$id' value = '$value' required/>";
-      return $html;
-
-      # example array form_input($form_attribute);
-      # $form_attribute = array('type' => 'text', 'class' => 'form-control', 'name' = > 'username', 'placeholder' = > 'username');
-   }
-
-   public function form_input_readonly($type, $inputmode = null, $dataToggle = null, $dataTarget = null, $maxlength = null, $class, $name, $placeholder, $id = null, $value = null)
-   {
-      # example simple no array
-      $html = "<input type='$type' inputmode='$inputmode' maxlength='$maxlength' data-bs-toggle='$dataToggle' data-bs-target='$dataTarget' class='$class' name='$name' placeholder='$placeholder' id='$id' value = '$value' readonly required/>";
-      return $html;
-
-      # example array form_input($form_attribute);
-      # $form_attribute = array('type' => 'text', 'class' => 'form-control', 'name' = > 'username', 'placeholder' = > 'username');
-   }
-
-   public function form_password($class, $name, $placeholder)
-   {
-      $html = "<input type='password' class='$class' name='$name' placeholder='$placeholder' id='password' required/>";
-      return $html;
-   }
-
-   public function cmb_dinamis($name, $table, $display_column, $value_column, $selected_value = null)
-   {
-      $sql = "SELECT $value_column, $display_column FROM $table";
-      $result =  $this->dbh->query($sql);
-
-      $html = "<div class='col-sm-6'>";
-      $html .= "<select name='$name' id='$name' class='form-select'>";
-      $html .= "<option value=''>-- Pilih --</option>";
-
-      if ($result->num_rows > 0) {
-         while ($row = $result->fetch_assoc()) {
-            // Cek apakah nilai saat ini adalah nilai yang dipilih
-            $selected = ($row[$value_column] == $selected_value) ? 'selected' : '';
-            $html .= "<option value='" . $row[$value_column] . "' $selected>" . $row[$display_column] . "</option>";
-         }
-      } else {
-         $html .= "<option value=''>Tidak ada opsi tersedia</option>";
-      }
-
-      $html .= "</select>";
-      $html .= "</div>";
-      return $html;
-   }
-
-   public function cmb_dinamis2($name, $table, $where_list = null, $stts = null, $display_column, $value_column, $selected_value = null)
-   {
-      $sql = "SELECT $value_column, $display_column FROM $table WHERE $where_list = '$stts'";
-      $result =  $this->dbh->query($sql);
-
-      $html = "<div class='col-sm-6'>";
-      $html .= "<select name='$name' id='$name' class='form-select'>";
-      $html .= "<option value=''>-- Pilih --</option>";
-
-      if ($result->num_rows > 0) {
-         while ($row = $result->fetch_assoc()) {
-            // Cek apakah nilai saat ini adalah nilai yang dipilih
-            $selected = ($row[$value_column] == $selected_value) ? 'selected' : '';
-            $html .= "<option value='" . $row[$value_column] . "' $selected>" . $row[$display_column] . "</option>";
-         }
-      } else {
-         $html .= "<option value=''>Tidak ada opsi tersedia</option>";
-      }
-
-      $html .= "</select>";
-      $html .= "</div>";
-      return $html;
    }
 }
