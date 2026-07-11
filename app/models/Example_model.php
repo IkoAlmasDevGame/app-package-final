@@ -4,14 +4,14 @@ namespace models;
 
 use core\Database2;
 
-class Example_model extends Database2
+class Example_model
 {
-   protected $dbh = null;
+   protected $db = null;
    private static $instance = null;
 
    public function __construct()
    {
-      $this->dbh = Database2::getInstance();
+      $this->db = Database2::getInstance();
    }
 
    public static function getInstance()
@@ -22,10 +22,10 @@ class Example_model extends Database2
       return self::$instance;
    }
 
-   public function GetByExample($table, $where, $id, $OrderBy){
-      $resW = $this->dbh->qPrepare2("SELECT * FROM $table WHERE $where = ? order by $OrderBy asc");
-      $resW->execute(array($id));
-      $res = $resW->fetchAll();
-      return $res;
-   }
+   // public function GetByExample($table, $where, $id, $OrderBy){
+   //    $resW = $this->db->qPrepare2("SELECT * FROM $table WHERE $where = ? order by $OrderBy asc");
+   //    $resW->execute(array($id));
+   //    $res = $resW->fetchAll();
+   //    return $res;
+   // }
 }
